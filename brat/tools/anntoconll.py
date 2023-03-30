@@ -135,9 +135,7 @@ def text_to_conll(f):
     else:
         sentences = []
         for l in f:
-            k = l.replace('. ', '.\n')
-            o = sentencebreaks_to_newlines(l)
-            df = pd.concat([df, pd.DataFrame([{'l': l, 'k': k, 'o': o}])])
+            l = sentencebreaks_to_newlines(l)
             sentences.extend([s for s in NEWLINE_TERM_REGEX.split(l) if s])
 
     lines = []
