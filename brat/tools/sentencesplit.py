@@ -28,6 +28,10 @@ def _normspace(s):
 
 def sentencebreaks_to_newlines(text):
     offsets = [o for o in regex_sentence_boundary_gen(text)]
+    # NOTE: Added to not raise Errors and Mismatching offsets in sentences 
+    # starting with whitespaces (e.g. " Juicio definitivo...")
+    if offsets[0][0] != 0:
+        offsets[0] = (0, offsets[0][1])
 
     # break into sentences
     sentences = [s for s in _text_by_offsets_gen(text, offsets)]
