@@ -27,7 +27,8 @@ def brat2conll_recursive(dir):
         # using the anntoconll from brat original repository
         files = [f.path for f in os.scandir(
             dir) if f.name.endswith('.txt')]
-        anntoconll.main(files)
+        if files:
+            anntoconll.main(files)
 
 
 def main(argv):
