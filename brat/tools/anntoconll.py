@@ -128,13 +128,15 @@ NEWLINE_TERM_REGEX = re.compile(r'(.*?\n)')
 def text_to_conll(f):
     """Convert plain text into CoNLL format."""
     global options
-    import pandas as pd
-    df = pd.DataFrame(columns=['l', 'k', 'o'])
+
     if options.nosplit:
         sentences = f.readlines()
     else:
         sentences = []
         for l in f:
+            # NOTE: replace 'zero width no-break space' chars with normal whitespaces
+            # This is to avoid strange chars in the resulting CoNLL files.
+            l = l.replace('\ufeff', ' ')
             l = sentencebreaks_to_newlines(l)
             sentences.extend([s for s in NEWLINE_TERM_REGEX.split(l) if s])
 
