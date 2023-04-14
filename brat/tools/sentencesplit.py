@@ -29,7 +29,8 @@ def _normspace(s):
 def sentencebreaks_to_newlines(text):
     offsets = [o for o in regex_sentence_boundary_gen(text)]
     # NOTE: Added to not raise Errors and Mismatching offsets in sentences 
-    # starting with whitespaces (e.g. " Juicio definitivo...")
+    # starting with whitespaces (e.g. " Juicio definitivo...") by forcing first sentence
+    # to start at offset 0.
     if offsets[0][0] != 0:
         offsets[0] = (0, offsets[0][1])
 
