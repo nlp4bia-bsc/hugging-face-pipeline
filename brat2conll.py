@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Converts a directory
+Generate the .conll files recursively of a given directory containing texts (.txt) and annotations (.ann)
 """
 import sys
 import os
