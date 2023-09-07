@@ -2,15 +2,38 @@
 
 Automation tools for different processes regarding the training and deployment of models and datasets to Hugging Face.
 
-NLP for Biomedical Information Analysis.
+NLP for Biomedical Information Analysis (NLP4BIA).
 
----
+## General Pipeline
+
+The general pipeline for NER is the following:
+1. Annotate using Brat, download the corpus
+2. Use `brat2conll` script
+3. Join all `.conll` files into one (one `.conll` per split)
+4. Generate `Hugging Face Dataset` and upload to Hub (private) or Google Drive
+5. Train model using the notebook on Google Colab (with GPU runtime)
+    1. Keep one notebook per experiment
+    2. Save models and select best model
+    3. Save prediction results (JSON)
+6. Use `predictions2conll` script to generate CoNLLs with predictions (JSON)
+7. Use `conll2ann` script to generate Standoff (.ann) files with predictions
+    1. Join all anotation files and give the correct format for the subtask evaluation
+
+
+## Directory structure
+
+- brat -> adapted version of original [brat repository](https://github.com/nlplab/brat) files. Necessary tools for some scripts.
+- brat2conll.py -> Brat (.txt & .ann) files to CoNLL (.conll)
+- predictions2conll.ipynb -> model predictions (.json & original .conll) to CoNLL (.conll)
+- conll2ann.ipynb -> .conll & .txt to Standoff (.ann)
+
+
+
+### brat2conll
 
 For the brat to CoNLL converter, we used an adapted version from the original [brat repository](https://github.com/nlplab/brat) (version Oct 4, 2021)[^1]
 
 You can find the modifications noted in comments starting with "NOTE".
-
-## Usage examples:
 
 The script will generate (.conll) files in the same directory as the original (.txt) and (.ann) files. It can be called from the command line with:
 
@@ -106,6 +129,10 @@ T1	PROCEDIMIENTO 775 794	ecografía abdominal
 #1	AnnotatorNotes T1	This is a free-text note annotation associated with T1
 T2	PROCEDIMIENTO 1229 1292	TAC abdomino-pélvico realizado con contraste oral e intravenoso
 ```
+
+## Contact
+
+Please, for any comment or doubt, you can contact me on: janrodmir \[at] gmail \[dot] com
 
 ## References
 
