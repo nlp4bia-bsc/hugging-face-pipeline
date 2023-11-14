@@ -38,8 +38,8 @@ def argparser():
                                  'annotations into CoNLL format.')
     ap.add_argument('-a', '--annsuffix', default="ann",
                     help='Standoff annotation file suffix (default "ann")')
-    ap.add_argument('-c', '--singleclass', default=None,
-                    help='Use given single class for annotations')
+    # ap.add_argument('-c', '--singleclass', default=None,
+    #                 help='Use given single class for annotations')
     ap.add_argument('-n', '--nosplit', default=False, action='store_true',
                     help='No sentence splitting')
     ap.add_argument('-o', '--outsuffix', default="conll",
@@ -48,6 +48,8 @@ def argparser():
                     help='Verbose output')
     ap.add_argument('text', metavar='TEXT', nargs='+',
                     help='Text files ("-" for STDIN)')
+    ap.add_argument('--multi-label', action=argparse.BooleanOptionalAction,
+                    help='Indicate if the generated CoNLLs should contain flat or nested (multi-label) entities.', default=False)
     return ap
 
 
@@ -135,7 +137,7 @@ def text_to_conll(f):
         sentences = []
         for l in f:
             # NOTE: replace 'zero width no-break space' chars with normal whitespaces
-            # This is to avoid strange chars in the resulting CoNLL files.
+            # This is to avoid strange chars in the resulting CoNLL files, which cause boundary missmatches.
             l = l.replace('\ufeff', ' ')
             l = sentencebreaks_to_newlines(l)
             sentences.extend([s for s in NEWLINE_TERM_REGEX.split(l) if s])
@@ -150,7 +152,8 @@ def text_to_conll(f):
 
         for t in tokens:
             if not t.isspace():
-                lines.append(['O', offset, offset + len(t), t])
+                # NOTE: empty tags instead of 'O'.
+                lines.append([[], offset, offset + len(t), t])
                 nonspace_token_seen = True
             offset += len(t)
 
@@ -162,6 +165,7 @@ def text_to_conll(f):
     if options.annsuffix:
         lines = relabel(lines, get_annotations(f.name))
 
+    # NOTE: reorder with
     lines = [[l[0], str(l[1]), str(l[2]), l[3]] if l else l for l in lines]
     return StringIO('\n'.join(('\t'.join(l) for l in lines)))
 
@@ -169,46 +173,79 @@ def text_to_conll(f):
 def relabel(lines, annotations):
     global options
 
-    # TODO: this could be done more neatly/efficiently
-    offset_label = {}
+    # # TODO: this could be done more neatly/efficiently
+    # offset_labels = {}
 
+    # for tb in annotations:
+    #     for i in range(tb.start, tb.end):
+    #         # NOTE: do not print warning if multi-label
+    #         if i in offset_labels:
+    #             offset_labels[i].append(tb)
+    #             if not options.multi_label:
+    #                 print("Warning: overlapping annotations", file=sys.stderr)
+    #         else:
+    #             offset_labels[i] = [tb]
+            
     for tb in annotations:
-        for i in range(tb.start, tb.end):
-            if i in offset_label:
-                print("Warning: overlapping annotations", file=sys.stderr)
-            offset_label[i] = tb
-
-    prev_label = None
-    for i, l in enumerate(lines):
-        if not l:
-            prev_label = None
-            continue
-        tag, start, end, token = l
-
-        # TODO: warn for multiple, detailed info for non-initial
-        label = None
-        for o in range(start, end):
-            if o in offset_label:
-                if o != start:
-                    print('Warning: annotation-token boundary mismatch: "%s" --- "%s"' % (
-                        token, offset_label[o].text), file=sys.stderr)
-                label = offset_label[o].type
+        # Get word that starts entity. One line_or_row = One word (CoNLL).
+        starting_line_idx = None
+        for i, line in enumerate(lines):
+            # If new sentence, do nothing
+            if not len(line):
+                continue
+            # Entity starts exactly in this word
+            elif line[1] == tb.start:
+                starting_line_idx = i
                 break
-
-        if label is not None:
-            if label == prev_label:
-                tag = 'I-' + label
+            # Entity started at middle of the word
+            elif line[1] < tb.start < line[2]:
+                print('Warning: annotation-token boundary mismatch: "%s" --- "%s"' % (
+                            line[3], tb.text), file=sys.stderr)
+                starting_line_idx = i
+                break
+        line[0].append(f"B-{tb.type}")
+        # If it's last one (single-word entity), go to next iteration
+        # This is to avoid e.g. the '.' in "Chile." to be tagged as I-GPE
+        if line[2] >= tb.end:
+            continue
+        # Add I-tags to subsequent words of entity
+        for i, line in enumerate(lines[starting_line_idx+1:]):
+            # If new sentence, do nothing
+            if not len(line):
+                continue
+            # Entity exactly finishes here
+            elif line[2] == tb.end:
+                line[0].append(f"I-{tb.type}")
+                break
+            # Entity finishes in the middle of the word
+            elif line[1] < tb.start < line[2]:
+                print('Warning: annotation-token boundary mismatch: "%s" --- "%s"' % (
+                            line[3], tb.text), file=sys.stderr)
+                line[0].append(f"I-{tb.type}")
+                break
+            # We are already outside of entity (just to ensure)
+            elif line[1] > tb.end:
+                break
+            # Word belongs to entity and is not the end. 
             else:
-                tag = 'B-' + label
-        prev_label = label
+                line[0].append(f"I-{tb.type}")
 
-        lines[i] = [tag, start, end, token]
+    for line in lines:
+        # If new sentence, do nothing
+        if not len(line):
+            continue
+        # If no class, assign O
+        elif not len(line[0]):
+            line[0] = 'O'
+        # Join all labels
+        else:
+            line[0] = '|'.join(line[0])
 
-    # optional single-classing
-    if options.singleclass:
-        for l in lines:
-            if l and l[0] != 'O':
-                l[0] = l[0][:2] + options.singleclass
+    # # optional single-classing
+    # if options.singleclass:
+    #     for l in lines:
+    #         if l and l[0] != 'O':
+    #             l[0] = l[0][:2] + options.singleclass
 
     return lines
 
@@ -280,6 +317,7 @@ def parse_textbounds(f):
 
 
 def eliminate_overlaps(textbounds):
+    global options
     eliminate = {}
 
     # TODO: avoid O(n^2) overlap check
@@ -289,15 +327,17 @@ def eliminate_overlaps(textbounds):
                 continue
             if t2.start >= t1.end or t2.end <= t1.start:
                 continue
-            # eliminate shorter
-            if t1.end - t1.start > t2.end - t2.start:
-                print("Eliminate %s due to overlap with %s" % (
-                    t2, t1), file=sys.stderr)
-                eliminate[t2] = True
-            else:
-                print("Eliminate %s due to overlap with %s" % (
-                    t1, t2), file=sys.stderr)
-                eliminate[t1] = True
+            # NOTE: Eliminate only if flat NER (not nested) or if nested and types match
+            if (not options.multi_label) or (t1.type == t2.type):
+                # eliminate shorter
+                if t1.end - t1.start > t2.end - t2.start:
+                    print("Eliminate %s due to overlap with %s" % (
+                        t2, t1), file=sys.stderr)
+                    eliminate[t2] = True
+                else:
+                    print("Eliminate %s due to overlap with %s" % (
+                        t1, t2), file=sys.stderr)
+                    eliminate[t1] = True
 
     return [t for t in textbounds if t not in eliminate]
 
@@ -311,6 +351,8 @@ def get_annotations(fn):
         textbounds = parse_textbounds(f)
 
     textbounds = eliminate_overlaps(textbounds)
+    # NOTE: sort by (1) earlier, and if tied, (2) longer entities.
+    textbounds = sorted(textbounds, key=lambda tb: (tb.start, -tb.end))
 
     return textbounds
 
