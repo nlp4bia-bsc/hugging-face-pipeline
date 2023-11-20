@@ -13,7 +13,7 @@ def argparser():
                                  'annotations into CoNLL format.')
     ap.add_argument('-r', '--root-dir',
                     help='Root directory containing .txt and .ann files', required=True)
-    ap.add_argument('--multi-label', action=argparse.BooleanOptionalAction,
+    ap.add_argument('--multi-label', action='store_true',
                     help='Indicate if the generated CoNLLs should contain flat or nested (multi-label) entities.', default=False)
     return ap
 
