@@ -346,9 +346,13 @@ def get_annotations(fn):
     global options
 
     annfn = path.splitext(fn)[0] + options.annsuffix
-
-    with open(annfn, 'rU') as f:
-        textbounds = parse_textbounds(f)
+    # NOTE: wrap open within try-except so that if no ann
+    try:
+        with open(annfn, 'rU') as f:
+            textbounds = parse_textbounds(f)
+    except FileNotFoundError:
+        print(f"Warning: annotation file {annfn} does not exist. No entities will appear in the resulting CoNLL file.", file=sys.stderr)
+        textbounds = []
 
     textbounds = eliminate_overlaps(textbounds)
     # NOTE: sort by (1) earlier, and if tied, (2) longer entities.
