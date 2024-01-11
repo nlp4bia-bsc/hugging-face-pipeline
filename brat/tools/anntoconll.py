@@ -22,6 +22,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../server/src'))
 sys.path.append('.')
 
 options = None
+missing_ann_files = 0
 
 EMPTY_LINE_RE = re.compile(r'^\s*$')
 CONLL_LINE_RE = re.compile(r'^\S+\t\d+\t\d+.')
@@ -344,6 +345,7 @@ def eliminate_overlaps(textbounds):
 
 def get_annotations(fn):
     global options
+    global missing_ann_files
 
     annfn = path.splitext(fn)[0] + options.annsuffix
     # NOTE: wrap open within try-except so that if no ann
@@ -351,6 +353,7 @@ def get_annotations(fn):
         with open(annfn, 'rU') as f:
             textbounds = parse_textbounds(f)
     except FileNotFoundError:
+        missing_ann_files += 1
         print(f"Warning: annotation file {annfn} does not exist. No entities will appear in the resulting CoNLL file.", file=sys.stderr)
         textbounds = []
 
@@ -378,6 +381,11 @@ def main(argv=None):
         options.annsuffix = '.' + options.annsuffix
 
     process_files(options.text)
+
+    # NOTE: count number of missing ann files
+    global missing_ann_files
+    if missing_ann_files:
+        print(f"A total of {missing_ann_files} annotation files were missing. No entities will appear in their resulting CoNLL file.")
 
 
 if __name__ == "__main__":

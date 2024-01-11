@@ -7,17 +7,32 @@ NLP for Biomedical Information Analysis (NLP4BIA).
 ## General Pipeline
 
 The general pipeline for NER is the following:
-1. Annotate using Brat, download the corpus
-2. Use `brat2conll` script
-3. Join all `.conll` files into one (one `.conll` per split)
-4. Generate `Hugging Face Dataset` and upload to Hub (private) or Google Drive
-5. Train model using the notebook on Google Colab (with GPU runtime)
-    1. Keep one notebook per experiment
-    2. Save models and select best model
-    3. Save prediction results (JSON)
-6. Use `predictions2conll` script to generate CoNLLs with predictions (JSON)
-7. Use `conll2ann` script to generate Standoff (.ann) files with predictions
-    1. Join all anotation files and give the correct format for the subtask evaluation
+1. Annotate using Brat, download the corpus.
+2. Make the splits, only **if not already split**, with the `generate_val_split.py` script by having all 
+2. Transform standoff (.ann) format to CoNLL (IOB scheme) using `brat2conll` script (check the `--multi-label` option).
+3. Join all `.conll` files into one (one `.conll` per split).
+    - `sed -s -e $'$a\\\n' train/*.conll > train.conll`
+    - `sed -s -e $'$a\\\n' valid/*.conll > validation.conll`
+    - `sed -s -e $'$a\\\n' test/*.conll > test.conll`
+4. Generate a **Hugging Face Dataset**:
+    1. Create a (private) dataset using the web. License cc-by-4.0 is okay.
+    2. Clone it locally. Using SSH: `git clone git@hf.co:datasets/<your-username>/<dataset-name>`. Alternatively, if not configured, you can also use HTTPS: `git clone https://huggingface.co/<your-username>/<dataset-name>`.
+    3. Copy the uploader template (single or multi-label) to the cloned directory and modify it accordingly (change name and label classes).
+        - You can get all (present) labels by going to the directory containing the ann files and executing: `find . -name '*.ann' -type f -exec grep -Hr '^T' {} + | cut -f2 | cut -d' ' -f1 | sort | uniq`
+        - Make sure that the uploader file has the **same name** as the cloned dataset repository (e.g. `meddoplace-ner`) with the `.py` extension (e.g. `meddoplace-ner.py`).
+    4. If you have larger files (>10MB), setup the [Git LFS](https://huggingface.co/docs/hub/repositories-getting-started).
+    5. Copy the joint CoNLL files (i.e. \[train|validation|test\].conll)
+    6. Push the changes:
+        - `git add -A`
+        - `git commit -m "Initial commit"`
+        - `git push`
+5. Train the model using the notebook on Google Colab (with GPU runtime) or AMD-CTE (GPU) in MareNostrum.
+    1. Keep one notebook per experiment.
+    2. Save models and select best model.
+    3. Save prediction results (JSON).
+6. Use `predictions2conll` script to generate CoNLLs with predictions (JSON).
+7. Use `conll2ann` script to generate Standoff (.ann) files with predictions.
+    1. Join all anotation files and give the correct format for the subtask evaluation.
 
 
 ## Directory structure
