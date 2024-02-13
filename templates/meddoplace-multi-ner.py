@@ -106,7 +106,7 @@ class Meddoplace(datasets.GeneratorBasedBuilder):
         ]
 
     def _generate_examples(self, filepath):
-        logger.info("enerating examples from = %s", filepath)
+        logger.info("Generating examples from = %s", filepath)
         with open(filepath, encoding="utf-8") as f:
             guid = 0
             tokens = []
