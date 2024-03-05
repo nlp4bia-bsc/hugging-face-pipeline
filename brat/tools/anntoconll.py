@@ -240,7 +240,13 @@ def relabel(lines, annotations):
             line[0] = 'O'
         # Join all labels
         else:
-            line[0] = '|'.join(line[0])
+            # NOTE: make the set to avoid duplicated classes for the same word, which might happen
+            # in both single and multi-label 
+            # (e.g. adriamicinaciclofosfamida -> adriamicina + ciclofosfamida -> B-FARMACO x2)
+            if len(set(line[0])) != len(line[0]):
+                print('Warning: multiple of the same label for the same word: "%s" --- %s' % (
+                            line[3], line[0]), file=sys.stderr)
+            line[0] = '|'.join(set(line[0]))
 
     # # optional single-classing
     # if options.singleclass:
