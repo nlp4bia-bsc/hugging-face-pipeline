@@ -10,10 +10,8 @@ The general pipeline for NER is the following:
 1. Annotate using Brat, download the corpus.
 2. Make the splits, only **if not already split**, with the `generate_val_split.py` script by having all 
 2. Transform standoff (.ann) format to CoNLL (IOB scheme) using `brat2conll` script (check the `--multi-label` option).
-3. Join all `.conll` files into one (one `.conll` per split).
-    - `sed -s -e $'$a\\\n' train/*.conll > train.conll`
-    - `sed -s -e $'$a\\\n' valid/*.conll > validation.conll`
-    - `sed -s -e $'$a\\\n' test/*.conll > test.conll`
+3. Join all `.conll` files into one (one `.conll` per split) using the `join_all_conlls.sh` script (needs execution permission `chmod +x join_all_conlls.sh`).
+    - `./join_all_conlls.sh <dataset_directory>`
 4. Generate a **Hugging Face Dataset**:
     1. Create a (private) dataset using the web. License cc-by-4.0 is okay.
     2. Clone it locally. Using SSH: `git clone git@hf.co:datasets/<your-username>/<dataset-name>`. Alternatively, if not configured, you can also use HTTPS: `git clone https://huggingface.co/<your-username>/<dataset-name>`.
