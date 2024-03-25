@@ -4,34 +4,32 @@ Automation tools for different processes regarding the training and deployment o
 
 NLP for Biomedical Information Analysis (NLP4BIA).
 
-## General Pipeline
+## Training Pipeline
 
 The general pipeline for NER is the following:
 1. Annotate using Brat, download the corpus.
 2. Make the splits, only **if not already split**, with the `generate_val_split.py` script by having all 
-2. Transform standoff (.ann) format to CoNLL (IOB scheme) using `brat2conll` script (check the `--multi-label` option).
-3. Join all `.conll` files into one (one `.conll` per split) using the `join_all_conlls.sh` script (needs execution permission `chmod +x join_all_conlls.sh`).
+3. Transform standoff (.ann) format to CoNLL (IOB2 scheme) using `brat2conll` script (check the `--multi-label` option).
+4. Join all `.conll` files into one (one `.conll` per split) using the `join_all_conlls.sh` script (needs execution permission `chmod +x join_all_conlls.sh`).
     - `./join_all_conlls.sh <dataset_directory>`
-4. Generate a **Hugging Face Dataset**:
-    1. Create a (private) dataset using the web. License cc-by-4.0 is okay.
-    2. Clone it locally. Using SSH: `git clone git@hf.co:datasets/<your-username>/<dataset-name>`. Alternatively, if not configured, you can also use HTTPS: `git clone https://huggingface.co/<your-username>/<dataset-name>`.
-    3. Copy the uploader template (single or multi-label) to the cloned directory and modify it accordingly (change name and label classes).
+    
+Alternatively, you can run `sed -s -e $'$a\\\n' ./*.conll > ../joint_conll.conll`
+
+5. Generate a local **Hugging Face Dataset**:
+    1. Copy the uploader template (single or multi-label) to the cloned directory and modify it accordingly (change name and label classes).
         - You can get all (present) labels by going to the directory containing the ann files and executing: `find . -name '*.ann' -type f -exec grep -Hr '^T' {} + | cut -f2 | cut -d' ' -f1 | sort | uniq`
         - Make sure that the uploader file has the **same name** as the cloned dataset repository (e.g. `meddoplace-ner`) with the `.py` extension (e.g. `meddoplace-ner.py`).
-    4. If you have larger files (>10MB), setup the [Git LFS](https://huggingface.co/docs/hub/repositories-getting-started).
-    5. Copy the joint CoNLL files (i.e. \[train|validation|test\].conll)
-    6. Push the changes:
-        - `git add -A`
-        - `git commit -m "Initial commit"`
-        - `git push`
-5. Train the model using the notebook on Google Colab (with GPU runtime) or AMD-CTE (GPU) in MareNostrum.
-    1. Keep one notebook per experiment.
-    2. Save models and select best model.
-    3. Save prediction results (JSON).
-6. Use `predictions2conll` script to generate CoNLLs with predictions (JSON).
-7. Use `conll2ann` script to generate Standoff (.ann) files with predictions.
-    1. Join all anotation files and give the correct format for the subtask evaluation.
+    2. Copy the joint CoNLL files (i.e. \[train|validation|test\].conll)
+6. Train the model using the `train.py` on MareNostrum 4 (CTE-AMD) or Google Colab (with GPU runtime). TODO: training without *Weights & Biases*. Ask Jan for a simpler version.
+    1. Save models and select best model.
 
+## Inference Pipeline
+
+We will reuse the Training Pipeline and make inference to the **test** set of the dataset.
+
+1. Generate empty .ann files with: `find /path/to/your/directory -type f -name '*.txt' -exec bash -c 'touch "${1%.txt}.ann"' _ {} \;`. The .ann files are needed for the pre-tokenization that takes place in `brat2conll`, and should be the same as the one performed during training.
+2. Follow steps 3, 4, and 5 from the Training pipeline (`brat2conll`, `join_conlls`, `HF Dataset`). You can just copy the contents of the `test.conll` to `train.conll` and `validation.conll`, as they will not be used.
+3. Run `model_inference.ipynb` specifying the arguments.
 
 ## Directory structure
 
