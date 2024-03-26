@@ -31,15 +31,6 @@ def parse_args():
     return parser
 
 
-
-
-# HF_DATASET = "/home/jan/bsc/cataccc-ner"
-# MODEL_PATH = "/home/jan/bsc/best-hlu3ln61"
-# MERGED_CONLL = "/home/jan/bsc/cataccc-ner/test.conll" # CoNLL file with all true labels for the split
-# ORIGINAL_CONLLS_DIR = "/home/jan/bsc/cataccc" # Directory containing the CoNLL files (with true labels) of the split
-# ORIGINAL_TXTS_DIR = ORIGINAL_CONLLS_DIR
-# OUTPUT_ANNS_DIR = "/home/jan/bsc/predictions_anns"
-# OUTPUT_CONLLS_DIR = "/home/jan/bsc/predictions_conlls" # Do not include a trailing '/'
 def model_inference(args):
     # Environment variables
     os.environ["PYTORCH_HIP_ALLOC_CONF"] = "garbage_collection_threshold:0.9,max_split_size_mb:4096" # otherwise we get HIP Error for memory fragmentation

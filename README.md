@@ -28,8 +28,12 @@ Alternatively, you can run `sed -s -e $'$a\\\n' ./*.conll > ../joint_conll.conll
 We will reuse the Training Pipeline and make inference to the **test** set of the dataset.
 
 1. Generate empty .ann files with: `find /path/to/your/directory -type f -name '*.txt' -exec bash -c 'touch "${1%.txt}.ann"' _ {} \;`. The .ann files are needed for the pre-tokenization that takes place in `brat2conll`, and should be the same as the one performed during training.
-2. Follow steps 3, 4, and 5 from the Training pipeline (`brat2conll`, `join_conlls`, `HF Dataset`). You can just copy the contents of the `test.conll` to `train.conll` and `validation.conll`, as they will not be used.
-3. Run `model_inference.ipynb` specifying the arguments.
+2. Follow steps 3, 4, and 5 from the Training pipeline (`brat2conll`, `join_conlls`, `HF Dataset`). You can just copy the contents of the `test.conll` to `train.conll` and `validation.conll`, as they will not be used. Make sure that the HF dataset loader script (e.g. distemist-ner.py) has the right tags and in the same order as during training (usually alphabetic)! Otherwise, you will get swapped entities.
+3. Run `model_inference.py` specifying all the arguments. It will run on GPU if available. Make sure that both output directories do not exist (this is to prevent unwanted overwriting). Example usage:
+
+```bash
+python hugging-face-pipeline/model_inference.py -ds cataccc-ner -m bsc-bio-ehr-es-drugtemist-train-nc-cat/best-1uzime9r/ --merged_conll cataccc-ner/test.conll --original_conlls_dir cataccc --original_txts_dir cataccc --output_anns_dir cataccc_predictions/drugtemist_anns --output_conlls_dir cataccc_predictions/drugtemist_conlls
+```
 
 ## Directory structure
 
