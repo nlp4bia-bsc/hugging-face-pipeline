@@ -268,7 +268,7 @@ def model_inference(args):
 
 
 def main(argv):
-    args = parse_args().parse_args(argv[1:])
+    args = parse_args(argv[1:])
     # Generate the .conll files recursively
     model_inference(args)
 
