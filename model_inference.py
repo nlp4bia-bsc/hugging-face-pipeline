@@ -116,7 +116,7 @@ def model_inference(args):
     # %%
     from transformers import RobertaForTokenClassification
 
-    model = RobertaForTokenClassification.from_pretrained(MODEL_PATH)
+    model = RobertaForTokenClassification.from_pretrained(MODEL_PATH).to(device)
 
     # %%
     from transformers import DataCollatorForTokenClassification
@@ -262,7 +262,7 @@ def model_inference(args):
         argv = ["brat/tools/BIOtoStandoff.py", os.path.join(ORIGINAL_TXTS_DIR, txt_file), os.path.join(OUTPUT_CONLLS_DIR, conll_file), "-1", "0"]
         res = BIOtoStandoff.main(argv)
         ann_file = conll_file.replace('.conll', '.ann')
-        with open(OUTPUT_ANNS_DIR + ann_file, 'w') as file:
+        with open(os.path.join(OUTPUT_ANNS_DIR, ann_file), 'w') as file:
             ann_content = map(lambda line: str(line)+'\n', res)
             file.writelines(ann_content)
 
