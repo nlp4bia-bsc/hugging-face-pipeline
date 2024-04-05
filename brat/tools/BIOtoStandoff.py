@@ -108,7 +108,8 @@ def BIO_lines_to_standoff(BIOlines, reftext, tokenidx=2, tagidx=-1):
             bi += 1
 
             # ... and skip whitespace on reference
-            while ri < len(reftext) and reftext[ri].isspace():
+            # NOTE: skip also BOM (byte-order marker)
+            while ri < len(reftext) and (reftext[ri].isspace() or reftext[ri] == '\ufeff'):
                 ri += 1
 
     # if the remaining part either the reference or the tagged
