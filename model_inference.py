@@ -168,7 +168,7 @@ def model_inference(args):
 
     # %%
     # Load the reference CoNLL (whole split)
-    df_conll = pd.read_csv(MERGED_CONLL, sep='\t', quoting=csv.QUOTE_NONE, header=None)
+    df_conll = pd.read_csv(MERGED_CONLL, sep='\t', quoting=csv.QUOTE_NONE, header=None, na_filter=False)
     df_conll.columns = ['label', 'start', 'end', 'text']
     df_conll
 
@@ -240,9 +240,6 @@ def model_inference(args):
 
     # %%
     os.makedirs(OUTPUT_ANNS_DIR)
-
-    # %%
-    conll_files = [file for file in os.listdir(OUTPUT_CONLLS_DIR) if file.endswith(".conll")]
 
     # %%
     # Write an .ann file for each .conll file by calling BIOtoStandoff.py
