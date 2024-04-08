@@ -26,8 +26,12 @@ class taggedEntity:
     def check(self):
         # sanity checks: the string should not contain newlines and
         # should be minimal wrt surrounding whitespace
-        assert "\n" not in self.eText, \
-            "ERROR: newline in entity: '%s'" % self.eText
+        # NOTE: print warning and keep only first line if text contains newlines.
+        # assert "\n" not in self.eText, \
+        #     "ERROR: newline in entity: '%s'" % self.eText
+        if "\n" in self.eText:
+            print("warning: newline in entity: '%s'.\nReturning only first line" % self.eText)
+            self.eText = self.eText.split('\n')[0]
         assert self.eText == self.eText.strip(), \
             "ERROR: entity contains extra whitespace: '%s'" % self.eText
 
