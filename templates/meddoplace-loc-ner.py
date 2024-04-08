@@ -20,9 +20,9 @@ NLP for Biomedical Information Analysis.
 """
 
 # MODIFY THIS
-_BASE_URL = f"https://huggingface.co/datasets/<your-username>/<dataset-name>/raw/main/"
+#_BASE_URL = f"https://huggingface.co/datasets/<your-username>/<dataset-name>/raw/main/"
 # If training locally, you can just specify the path where the CoNLLs are:
-# _BASE_URL = "./"
+_BASE_URL = "./"
 _URLS = {
     "train": _BASE_URL + "train.conll",
     "validation": _BASE_URL + "validation.conll",
