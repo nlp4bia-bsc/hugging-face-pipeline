@@ -1,23 +1,9 @@
-# Loading script for the MEDDOPLACE NER dataset (LOC version).
+# Loading script for the MEDDOPLACE dataset.
 import datasets
 
 
 logger = datasets.logging.get_logger(__name__)
 
-
-_CITATION = """\
-@inproceedings{miranda2020named,
-  title={Named entity recognition, concept normalization and clinical coding: Overview of the cantemist track for cancer text mining in spanish, corpus, guidelines, methods and results},
-  author={Miranda-Escalada, A and Farr{\'e}, E and Krallinger, M},
-  booktitle={Proceedings of the Iberian Languages Evaluation Forum (IberLEF 2020), CEUR Workshop Proceedings},
-  year={2020}
-}"""
-
-
-_DESCRIPTION = """\
-MEDDOPLACE dataset contains samples with annotated procedures in clinic documents.
-NLP for Biomedical Information Analysis.
-"""
 
 # MODIFY THIS
 #_BASE_URL = f"https://huggingface.co/datasets/<your-username>/<dataset-name>/raw/main/"
@@ -54,15 +40,7 @@ class Meddoplace(datasets.GeneratorBasedBuilder):
     ]
 
     def _get_bio_tags(self):
-        CLASS_NAMES = [
-            'GPE',
-            'GEO', 
-            'FAC', 
-            'COMUNIDAD', 
-            'IDIOMA', 
-            'DEPARTAMENTO', 
-            'TRANSPORTE'
-        ]
+        CLASS_NAMES = ['EXAMPLE_CLASS']
         bio_tags = ["O"]
         for class_name in CLASS_NAMES:
             bio_tags.append("B-" + class_name)
@@ -71,7 +49,6 @@ class Meddoplace(datasets.GeneratorBasedBuilder):
 
     def _info(self):
         return datasets.DatasetInfo(
-            description=_DESCRIPTION,
             features=datasets.Features(
                 {
                     "id": datasets.Value("string"),
@@ -84,7 +61,6 @@ class Meddoplace(datasets.GeneratorBasedBuilder):
                 }
             ),
             homepage="https://temu.bsc.es/meddoplace/",
-            citation=_CITATION,
         )
 
     def _split_generators(self, dl_manager):

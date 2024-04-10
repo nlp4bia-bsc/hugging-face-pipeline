@@ -1,4 +1,4 @@
-# Loading script for the MEDDOPLACE NER dataset.
+# Loading script for the MEDDOPLACE dataset.
 import datasets
 import os
 
@@ -55,18 +55,7 @@ class Meddoplace(datasets.GeneratorBasedBuilder):
     ]
 
     def _get_bio_tags(self):
-        CLASS_NAMES = [
-            'GPE_NOM',
-            'GPE_GEN', 
-            'GEO_NOM', 
-            'GEO_GEN', 
-            'FAC_NOM', 
-            'FAC_GEN', 
-            'COMUNIDAD', 
-            'IDIOMA', 
-            'DEPARTAMENTO', 
-            'TRANSPORTE'
-        ]
+        CLASS_NAMES = ['EXAMPLE_CLASS']
         bio_tags = ["O"]
         for class_name in CLASS_NAMES:
             bio_tags.append("B-" + class_name)
