@@ -403,6 +403,7 @@ def train(config):
         warmup_ratio=_warmup_ratio,
         load_best_model_at_end=True,
         metric_for_best_model="eval_f1",
+        save_total_limit=5
     )
     
     
