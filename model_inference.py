@@ -23,11 +23,11 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Specify variables for the Model Inference")
     parser.add_argument('-ds', "--dataset", required=True, type=str, help="Path to the HF dataset")
     parser.add_argument('-m', "--model", required=True, type=str, help="Path to the model")
-    parser.add_argument("--merged_conll", required=True, type=str, help="Path to the merged CoNLL file")
-    parser.add_argument("--original_conlls_dir", required=True, type=str, help="Directory containing original CoNLL files")
-    parser.add_argument("--original_txts_dir", required=True, type=str, help="Directory containing original TXT files (defaults to original_conlls_dir)")
-    parser.add_argument("--output_anns_dir", required=True, type=str, help="Output directory for annotations")
-    parser.add_argument("--output_conlls_dir", required=True, type=str, help="Output directory for CoNLL files")
+    parser.add_argument("--merged_conll", type=str, help="Path to the merged CoNLL file. Defaults to test.conll in dataset")
+    parser.add_argument('-ocd', "--original_conlls_dir", required=True, type=str, help="Directory containing original CoNLL files")
+    parser.add_argument("--original_txts_dir", type=str, help="Directory containing original TXT files. Defaults to original_conlls_dir")
+    parser.add_argument("-o", "--output_anns_dir", required=True, type=str, help="Output directory for annotations")
+    parser.add_argument("--output_conlls_dir", type=str, help="Output directory for CoNLL files. Defaults to output_annd_dir")
     return parser
 
 
@@ -39,11 +39,13 @@ def model_inference(args):
     # %%
     HF_DATASET = args.dataset
     MODEL_PATH = args.model
-    MERGED_CONLL = args.merged_conll
+    MERGED_CONLL = args.merged_conll if args.merged_conll else f"{HF_DATASET}/test.conll"
     ORIGINAL_CONLLS_DIR = args.original_conlls_dir
     ORIGINAL_TXTS_DIR = args.original_txts_dir if args.original_txts_dir else ORIGINAL_CONLLS_DIR
     OUTPUT_ANNS_DIR = args.output_anns_dir
-    OUTPUT_CONLLS_DIR = args.output_conlls_dir
+    OUTPUT_CONLLS_DIR = args.output_conlls_dir if args.output_conlls_dir else OUTPUT_ANNS_DIR
+    if os.path.exists(OUTPUT_ANNS_DIR) or os.path.exists(OUTPUT_CONLLS_DIR):
+        raise FileExistsError(f"{OUTPUT_ANNS_DIR} or {OUTPUT_CONLLS_DIR} exist")
 
     # %%
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -192,7 +194,6 @@ def model_inference(args):
     # %%
     for level_0, level_1 in zip(too_long_level_0, too_long_level_1):
         too_long_idx_flat = df_flat[(df_flat['level_0'] == level_0) & (df_flat['level_1'] == level_1)].index[0]
-        tokenized_too_long = tokenizer(dataset['test'][4349]['tokens'], is_split_into_words=True, return_length=True)
         num_words = len(dataset['test'][level_0]['ner_tags'])
         print(f"{num_words - level_1 = }")
         for i in range(num_words - level_1):
@@ -239,7 +240,7 @@ def model_inference(args):
     from brat.tools import BIOtoStandoff
 
     # %%
-    os.makedirs(OUTPUT_ANNS_DIR)
+    os.makedirs(OUTPUT_ANNS_DIR, exist_ok=True)
 
     # %%
     # Write an .ann file for each .conll file by calling BIOtoStandoff.py
