@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+"""
+Author: Jan Rodríguez
+Date: 10/04/2024
+"""
+# TODO: improve robustness (do not call bash processes)
 
 import subprocess
 import sys
@@ -28,8 +33,8 @@ def build_dataset(args):
     subprocess.run(f'bash hugging-face-pipeline/join_all_conlls.sh {args.dir}', shell=True)
     # Create the HF dataset dir
     os.makedirs(args.name)
-    loader_path = f"{args.name}/{args.name}.py"
-    copy2(src="hugging-face-pipeline/templates/meddoplace-loc-ner.py", dst=loader_path)
+    loader_path = f"{args.name}/{os.path.basename(args.name)}.py"
+    copy2(src="hugging-face-pipeline/templates/meddoplace-ner.py", dst=loader_path)
     name_camel = to_camel_case(args.name)
     # Change names in the HF dataset loading script
     subprocess.run(f'sed -i "s/\meddoplace/{name_camel}/g;s/Meddoplace/{name_camel[0].upper()+name_camel[1:]}/g;s/MEDDOPLACE/{name_camel.upper()}/g" {loader_path}', shell=True)
