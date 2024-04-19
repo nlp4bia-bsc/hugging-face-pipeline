@@ -35,7 +35,7 @@ def build_dataset(args):
     os.makedirs(args.name)
     loader_path = f"{args.name}/{os.path.basename(args.name)}.py"
     copy2(src="hugging-face-pipeline/templates/meddoplace-ner.py", dst=loader_path)
-    name_camel = to_camel_case(args.name)
+    name_camel = to_camel_case(os.path.basename(args.name))
     # Change names in the HF dataset loading script
     subprocess.run(f'sed -i "s/\meddoplace/{name_camel}/g;s/Meddoplace/{name_camel[0].upper()+name_camel[1:]}/g;s/MEDDOPLACE/{name_camel.upper()}/g" {loader_path}', shell=True)
     # Get all classes that appear in the dataset (ordered) and substitute them in the HF dataset loading script
