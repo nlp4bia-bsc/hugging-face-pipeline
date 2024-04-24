@@ -179,11 +179,13 @@ def model_inference(args):
 
     # %%
     df['token_length'] = df['labels'].apply(len)
-    too_long_level_0 = df[df['token_length'] >= 512].index
-    df[df['token_length'] >= 512] # max input RobertaModel
+    # sentences_idx with max length
+    too_long_level_0 = df[df['token_length'] == 512].index
+    df[df['token_length'] == 512] # max input RobertaModel
 
     # %%
     df_flat = df_filtered.reset_index()
+    # how many pre-tokens processed in each exceeding-length sentence
     too_long_level_1 = df_flat[df_flat['level_0'].isin(too_long_level_0)].groupby('level_0')['level_1'].count().values
     too_long_level_1
 
@@ -192,13 +194,17 @@ def model_inference(args):
     predicted_labels_list = df_filtered['predicted_label_str'].to_list()
 
     # %%
+    added_O_offset = 0
     for level_0, level_1 in zip(too_long_level_0, too_long_level_1):
-        too_long_idx_flat = df_flat[(df_flat['level_0'] == level_0) & (df_flat['level_1'] == level_1)].index[0]
+        too_long_idx_flat = df_flat[df_flat['level_0'] == level_0].index[-1]
         num_words = len(dataset['test'][level_0]['ner_tags'])
-        print(f"{num_words - level_1 = }")
-        for i in range(num_words - level_1):
-            labels_list.insert(too_long_idx_flat, 'O')
-            predicted_labels_list.insert(too_long_idx_flat, 'O')
+        diff_offset = num_words - level_1
+        print(f"{diff_offset = }")
+        for i in range(diff_offset):
+            conll_loc = too_long_idx_flat + added_O_offset
+            labels_list.insert(conll_loc, 'O')
+            predicted_labels_list.insert(conll_loc, 'O')
+        added_O_offset += diff_offset
 
     # %%
     print(f"{len(labels_list) = }")
