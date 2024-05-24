@@ -179,6 +179,8 @@ def model_inference(args):
 
     # %%
     df['token_length'] = df['labels'].apply(len)
+    # level 0, sentence
+    # level 1: token id (later level 1 is length of sentence)
     # sentences_idx with max length
     too_long_level_0 = df[df['token_length'] == 512].index
     df[df['token_length'] == 512] # max input RobertaModel

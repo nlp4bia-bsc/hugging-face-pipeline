@@ -8,41 +8,33 @@ NLP for Biomedical Information Analysis (NLP4BIA).
 
 The general pipeline for NER is the following:
 1. Annotate using Brat, download the corpus.
-2. Make the splits, only **if not already split**, with the `generate_val_split.py` script by having all 
-3. Transform standoff (.ann) format to CoNLL (IOB2 scheme) using `brat2conll` script (check the `--multi-label` option).
-4. Join all `.conll` files into one (one `.conll` per split) using the `join_all_conlls.sh` script (needs execution permission `chmod +x join_all_conlls.sh`).
-    - `./join_all_conlls.sh <dataset_directory>`
-    
-Alternatively, you can run `sed -s -e $'$a\\\n' ./*.conll > ../joint_conll.conll`
-
-5. Generate a local **Hugging Face Dataset**:
-    1. Copy the uploader template (single or multi-label) to the cloned directory and modify it accordingly (change name and label classes).
-        - You can get all (present) labels by going to the directory containing the ann files and executing: `find . -name '*.ann' -type f -exec grep -Hr '^T' {} + | cut -f2 | cut -d' ' -f1 | sort | uniq`
-        - Make sure that the uploader file has the **same name** as the cloned dataset repository (e.g. `meddoplace-ner`) with the `.py` extension (e.g. `meddoplace-ner.py`).
-    2. Copy the joint CoNLL files (i.e. \[train|validation|test\].conll)
-6. Train the model using the `train.py` on MareNostrum 4 (CTE-AMD) or Google Colab (with GPU runtime). TODO: training without *Weights & Biases*. Ask Jan for a simpler version.
+2. Make the splits, only **if not already split**, with the `generate_val_split.py` script. Indicate the source (-s), destination (-d), and test_size (number of txts if type integer; percentage if float between 0 and 1)
+    - `python hugging-face-pipeline/generate_val_split.py -s <my-corpus>/train -d <my-corpus>/test --test_size 125`
+3. Use the `build_dataset.py` script to create a Hugging Face Dataset with the pre-tokenized input. Indicate the source directory of the corpus (-d) and the output name/path of the Hugging Face dataset (-n).
+    - `python hugging-face-pipeline/build_dataset.py -d <my-corpus>/ -n <my-corpus-ner>`
+4. Train the model using the `train.py` on MareNostrum 4 (CTE-AMD) or Google Colab (with GPU runtime). TODO: training without *Weights & Biases*. Ask Jan for a simpler version.
     1. Save models and select best model.
 
 ## Inference Pipeline
 
 We will reuse the Training Pipeline and make inference to the **test** set of the dataset.
 
-1. Generate empty .ann files with: `find /path/to/your/directory -type f -name '*.txt' -exec bash -c 'touch "${1%.txt}.ann"' _ {} \;`. The .ann files are needed for the pre-tokenization that takes place in `brat2conll`, and should be the same as the one performed during training.
-2. Follow steps 3, 4, and 5 from the Training pipeline (`brat2conll`, `join_conlls`, `HF Dataset`). You can just copy the contents of the `test.conll` to `train.conll` and `validation.conll`, as they will not be used. Make sure that the HF dataset loader script (e.g. distemist-ner.py) has the right tags and in the same order as during training (usually alphabetic)! Otherwise, you will get swapped entities.
+1. Generate empty .ann files with: `find /path/to/your/directory -type f -name '*.txt' -exec bash -c 'touch "${1%.txt}.ann"' _ {} \;`. The .ann files are needed for the pre-tokenization that takes place in the `brat2conll` subscript of `build_dataset.py`.
+2. Create the same directory structure of training (train/valid/test with all .txts and .anns). We will generate the predictions for the test split only, so train and valid can be just a copy of test.
+    - `cd <my-inference-corpus>`
+    - `mkdir test`
+    - `mv * test`
+    - `cp -r test train`
+    - `cp -r test valid`
+2. Use the `build_dataset.py` script to create a Hugging Face Dataset with the pre-tokenized input. Indicate the source directory of the corpus (-d) and the output name/path of the Hugging Face dataset (-n).
+    - `python hugging-face-pipeline/build_dataset.py -d <my-corpus>/ -n <my-corpus-ner>`
+    
+    Make sure that the generated HF dataset loader script (e.g. my-corpus-ner.py) has the right tags and in the same order as the one used during training (usually alphabetic)! Otherwise, you will get swapped entities.
 3. Run `model_inference.py` specifying all the arguments. It will run on GPU if available. Make sure that both output directories do not exist (this is to prevent unwanted overwriting). Example usage:
+    - `python hugging-face-pipeline/model_inference.py -ds <my-corpus-ner> -m <my-model> -ocd <my-corpus>/test -o <my-corpus-predictions>`
 
-```bash
-python hugging-face-pipeline/model_inference.py -ds cataccc-ner -m bsc-bio-ehr-es-drugtemist-train-nc-cat/best-1uzime9r/ --merged_conll cataccc-ner/test.conll --original_conlls_dir cataccc --original_txts_dir cataccc --output_anns_dir cataccc_predictions/drugtemist_anns --output_conlls_dir cataccc_predictions/drugtemist_conlls
-```
 
 ## Directory structure
-
-- brat -> adapted version of original [brat repository](https://github.com/nlplab/brat) files. Necessary tools for some scripts.
-- brat2conll.py -> Brat (.txt & .ann) files to CoNLL (.conll)
-- predictions2conll.ipynb -> model predictions (.json & original .conll) to CoNLL (.conll)
-- conll2ann.ipynb -> .conll & .txt to Standoff (.ann)
-
-
 
 ### brat2conll
 
