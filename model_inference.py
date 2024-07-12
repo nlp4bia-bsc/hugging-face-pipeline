@@ -61,10 +61,15 @@ def model_inference(args):
     # %% [markdown]
     # ### Prepare data & class weights
 
+        # %%
+    from transformers import RobertaForTokenClassification
+
+    model = RobertaForTokenClassification.from_pretrained(MODEL_PATH).to(device)
+
     # %%
-    classes = dataset["train"].features["ner_tags"].feature
-    id2label = {idx: tag for idx, tag in enumerate(classes.names)}
-    label2id = {tag: idx for idx, tag in enumerate(classes.names)}
+    num_classes = len(model.config.id2label)
+    id2label = model.config.id2label
+    label2id = model.config.label2id
 
     # %%
     from transformers import AutoTokenizer
@@ -106,10 +111,7 @@ def model_inference(args):
     # %% [markdown]
     # ### Evaluation metrics
 
-    # %%
-    from transformers import RobertaForTokenClassification
 
-    model = RobertaForTokenClassification.from_pretrained(MODEL_PATH).to(device)
 
     # %%
     from transformers import DataCollatorForTokenClassification
@@ -137,7 +139,7 @@ def model_inference(args):
             predicted_label = torch.argmax(output.logits, axis=-1).cpu().numpy()
         # Calculamos la loss por token. La los en NER está siendo cross_entroy
         loss_fct = torch.nn.CrossEntropyLoss(reduction="none")
-        loss = loss_fct(output.logits.view(-1, classes.num_classes),
+        loss = loss_fct(output.logits.view(-1, num_classes),
                             labels.view(-1))
         # Hacemos el unflatten para ponerlo en formato de salida
         loss = loss.view(len(input_ids), -1).cpu().numpy()
