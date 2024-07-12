@@ -7,7 +7,7 @@ NLP for Biomedical Information Analysis (NLP4BIA).
 ## Training Pipeline
 
 The general pipeline for NER is the following:
-1. Annotate using Brat, download the corpus.
+1. Annotate using Brat, download the corpus. An example can be found in the [zip](https://zenodo.org/records/8224056/files/medprocner_gs_train+test+gazz+multilingual+crossmap_230808.zip?download=1) file of the [MedProcNER](https://zenodo.org/records/8224056) Shared Task page, in the train and test directories.
 2. Make the splits, only **if not already split**, with the `generate_val_split.py` script. Indicate the source (-s), destination (-d), and test_size (number of txts if type integer; percentage if float between 0 and 1)
     - `python hugging-face-pipeline/generate_val_split.py -s <my-corpus>/train -d <my-corpus>/test --test_size 125`
 3. Use the `build_dataset.py` script to create a Hugging Face Dataset with the pre-tokenized input. Indicate the source directory of the corpus (-d) and the output name/path of the Hugging Face dataset (-n).
