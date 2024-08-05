@@ -52,7 +52,7 @@ def model_inference(args):
     device
 
     # %%
-    dataset = load_dataset(HF_DATASET)
+    dataset = load_dataset(HF_DATASET, download_mode='force_redownload', trust_remote_code=True)
     dataset
 
     # %% [markdown]

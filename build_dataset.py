@@ -48,7 +48,7 @@ def build_dataset(args):
     copy2(f"{args.dir}/validation.conll", args.name)
     copy2(f"{args.dir}/test.conll", args.name)
     # Make sure the dataset can load correctly
-    dataset = load_dataset(args.name, download_mode='force_redownload')
+    dataset = load_dataset(args.name, download_mode='force_redownload', trust_remote_code=True)
     print(dataset)
     print(dataset['train'][0])
 
