@@ -246,6 +246,14 @@ def relabel(lines, annotations):
             if len(set(line[0])) != len(line[0]):
                 print('Warning: multiple of the same label for the same word: "%s" --- %s' % (
                             line[3], line[0]), file=sys.stderr)
+            # NOTE: case of two mentions within the same word, even though they do not overlap at all
+            # and therefore were not detected and removed.
+            # Correct the sentences where it happens. I prefer to not raise an error, so you can
+            # correct all at once instead of one by one. Just search for '|' character in the conlls and
+            # remove the small entities from the anns.
+            if len(set(line[0])) > 1 and not options.multi_label:
+                print('ERROR, needs manual correction: nested entities after mismatch: (%s, %s, %s, %s)' % (
+                            tb.start, tb.end, tb.type, tb.text), file=sys.stderr)
             line[0] = '|'.join(set(line[0]))
 
     # # optional single-classing
