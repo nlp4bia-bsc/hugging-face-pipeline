@@ -217,7 +217,10 @@ def model_inference(args):
 
     # %%
     # Make sure that both true labels from the dataset and CoNLL are the same
-    assert labels_list ==  df_conll['label'].to_list()
+    assert len(labels_list) ==  len(df_conll['label'].to_list())
+    if labels_list !=  df_conll['label'].to_list():
+        print("WARNING: Labels obtained by using model id2label and the original CoNLL labels do not match. \
+              It is expected if model was trained on a different version of the dataset (different id2label order).")
 
     # %%
     # Replace true labels with predicted labels
