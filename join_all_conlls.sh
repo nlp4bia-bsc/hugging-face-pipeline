@@ -1,5 +1,5 @@
 #!/bin/bash
 
-sed -s -e $'$a\\\n' $1/train/*.conll > $1/train.conll
-sed -s -e $'$a\\\n' $1/valid/*.conll > $1/validation.conll
-sed -s -e $'$a\\\n' $1/test/*.conll > $1/test.conll
+find "$1/train" -name '*.conll' -type f | sort | xargs sed -s -e '$a\' > "$1/train.conll"
+find "$1/valid" -name '*.conll' -type f | sort | xargs sed -s -e '$a\' > "$1/validation.conll"
+find "$1/test" -name "*.conll" -type f | sort | xargs sed -s -e '$a\' > "$1/test.conll"
