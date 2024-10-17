@@ -52,7 +52,7 @@ def model_inference(args):
     device
 
     # %%
-    dataset = load_dataset(HF_DATASET, download_mode='force_redownload', trust_remote_code=True)
+    dataset = load_dataset(HF_DATASET, trust_remote_code=True) # download_mode='force_redownload'
     dataset
 
     # %% [markdown]
@@ -257,12 +257,15 @@ def model_inference(args):
 
     # %%
     # Write an .ann file for each .conll file by calling BIOtoStandoff.py
-    conll_files = [file for file in os.listdir(OUTPUT_CONLLS_DIR) if file.endswith(".conll")]
-
+    conll_files = sorted([file for file in os.listdir(OUTPUT_CONLLS_DIR) if file.endswith(".conll")])
+    
     for conll_file in conll_files:
         txt_file = conll_file.replace('.conll', '.txt')
         argv = ["brat/tools/BIOtoStandoff.py", os.path.join(ORIGINAL_TXTS_DIR, txt_file), os.path.join(OUTPUT_CONLLS_DIR, conll_file), "-1", "0"]
-        res = BIOtoStandoff.main(argv)
+        try:
+            res = BIOtoStandoff.main(argv)
+        except Exception as e:
+            print("ERROR with file: "+conll_file)
         ann_file = conll_file.replace('.conll', '.ann')
         with open(os.path.join(OUTPUT_ANNS_DIR, ann_file), 'w') as file:
             ann_content = map(lambda line: str(line)+'\n', res)
