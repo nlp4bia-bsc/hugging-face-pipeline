@@ -128,7 +128,8 @@ def BIO_lines_to_standoff(BIOlines, reftext, tokenidx=2, tagidx=-1):
     # cleanup for tagger errors where an entity begins with a
     # "I" tag instead of a "B" tag
     revisedTagged = []
-    prevTag = None
+    # NOTE: prevTag initialized at 'O' instead of 'None', otherwise AssertionError if file starting with I-XXX tag.
+    prevTag = "O"
     for startoff, endoff, ttag, ttype in taggedTokens:
         if prevTag == "O" and ttag == "I":
             print("Note: rewriting \"I\" -> \"B\" after \"O\"", file=sys.stderr)
@@ -221,9 +222,9 @@ def main(argv):
     if len(argv) >= 5:
         bioIdx = argv[4]
 
-    with open(textfn, 'rU') as textf:
+    with open(textfn, 'r') as textf:
         text = textf.read()
-    with open(biofn, 'rU') as biof:
+    with open(biofn, 'r') as biof:
         bio = biof.read()
 
     if tokenIdx is None:
