@@ -36,6 +36,28 @@ We will reuse the Training Pipeline and make inference to the **test** set of th
 
 ## Directory structure
 
+- requirements.txt -> list of necessary
+- brat -> adapted version of original [brat repository](https://github.com/nlplab/brat) files. Necessary tools for some scripts.
+- templates -> files used in different scripts as templates.
+- scripts:
+    - build_dataset.py -> generate a HF NER dataset (CoNLL + loader script)
+    - brat2conll.py -> Brat (.txt & .ann) files to CoNLL (.conll)
+    - model_inference.py -> process a HF NER dataset with a specific model)
+    - multiple_model_inference.py -> call model_inference.py for a list of corpus and models.
+    - simple_inference.py -> use the HF NER pipeline directly, which is limited
+    - train.py -> script called within Weights & Biases Sweep for training (with hyperparameter optimization)
+    - join_all_conlls.sh -> generate a {train|validation|test}.conll files by concatenating in order all conll files in each of the 3 subdirectories
+    - generate_val_split.py -> randomnly generate a split
+    - generate_brat_colors.py -> generate colors for brat (to be included in visual.conf) for a given set of classes/entities
+
+
+- notebooks: directory containing useful tools for debugging, partial pipelines and work not polished yet (paths might need an update).
+    - ann2tsv.ipynb -> Create a tsv (with filename) from .ann files
+    - load_predictions.ipynb -> snippet to load .ann files into a pandas dataframe
+    - model_inference_pipeline -> tests to integrate within HF NER pipeline (not working)
+    - conll2ann.ipynb -> .conll & .txt to Standoff (.ann)
+    - predictions2conll.ipynb -> model predictions (.json & original .conll) to CoNLL (.conll) (not used anymore, as predictions are directly written to CoNLL files)
+
 ### brat2conll
 
 For the brat to CoNLL converter, we used an adapted version from the original [brat repository](https://github.com/nlplab/brat) (version Oct 4, 2021)[^1]
