@@ -39,9 +39,12 @@ def build_dataset(args):
     # Change names in the HF dataset loading script
     subprocess.run(f'sed -i "s/\meddoplace/{name_camel}/g;s/Meddoplace/{name_camel[0].upper()+name_camel[1:]}/g;s/MEDDOPLACE/{name_camel.upper()}/g" {loader_path}', shell=True)
     # Get all classes that appear in the dataset (ordered) and substitute them in the HF dataset loading script
-    command = "find {} -name '*.ann' -type f -exec grep -Hr '^T' {{}} + | cut -f2 | cut -d' ' -f1 | sort | uniq".format(args.dir)
+    command = "find {}/train {}/valid {}/test -name '*.ann' -type f -exec grep -Hr '^T' {{}} + | cut -f2 | cut -d' ' -f1 | sort | uniq".format(args.dir, args.dir, args.dir)
+    print(f"{command=}")
     class_names = subprocess.run(command, shell=True, text=True, capture_output=True).stdout.splitlines()
+    print(f"{class_names=}")
     class_names_str = "CLASS_NAMES = [" + ', '.join([f"'{name}'" for name in class_names]) + "]"
+    print(f"{class_names_str=}")
     subprocess.run(f'sed -i "s/CLASS_NAMES = \[\'EXAMPLE_CLASS\'\]/{class_names_str}/" {loader_path}', shell=True)
     # Copy generated files from brat2conll
     copy2(f"{args.dir}/train.conll", args.name)
