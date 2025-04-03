@@ -1,0 +1,46 @@
+program: train.py
+project: "baritone"
+method: bayes
+metric:
+  name: eval/f1
+  goal: maximize
+run_cap: 50
+
+parameters:
+    PROJECT_NAME:
+      values: ["baritone"]
+    HF_DATASET:
+      values: ["/home/bsc/bsc014527/scratch/baritone/training_datasets/baritone_enfermedad_reumaccc_es_200_reumaccc_cat_200_rmpt_385-ner"]
+    _output_dir:
+      values: ["models/baritone-enfermedad-tagger"]
+    BASE_MODEL:
+      values: ["IIC/RigoBERTa-Clinical", "PlanTL-GOB-ES/bsc-bio-ehr-es", "/gpfs/projects/bsc14/MN4/bsc14/hugging_face_models/ner/bsc-bio-ehr-es-carmen-distemist"] #["PlanTL-GOB-ES/bsc-bio-ehr-es", "IIC/RigoBERTa-Clinical"]
+    _weight_strategy:
+      values: ['none'] # one of ('none', 'freq', 'freq_sqrt')
+    _num_epochs:
+      values: [10]
+    _batch_size:
+      values: [8, 16, 32]
+    _learning_rate:
+      distribution: q_log_uniform_values
+      min: 1e-7
+      max: 1e-3
+      q: 1e-6
+    _evalutation_strategy:
+      values: ["epoch"]
+    _weight_decay:
+      values: [0.01, 0.1] # >=0
+    _train_ratio_for_eval:
+      values: [0.1]
+    _warmup_ratio:
+      values: [0.1]
+    _classifier_dropout:
+      distribution: q_uniform
+      min: 0.1
+      max: 0.9
+      q: 0.2
+      #early_terminate:
+      #type: hyperband
+      #  s: 2
+      #  eta: 3
+      #max_iter: 27
