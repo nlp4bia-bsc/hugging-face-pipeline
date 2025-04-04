@@ -32,6 +32,10 @@ class taggedEntity:
         if "\n" in self.eText:
             print("warning: newline in entity: '%s'.\nReturning only first line" % self.eText)
             self.eText = self.eText.split('\n')[0]
+        # NOTE: do the same also for tabulations \t
+        if "\t" in self.eText:
+            print("warning: tabulation in entity: '%s'.\nReturning only text until first tabulation" % self.eText)
+            self.eText = self.eText.split('\t')[0]
         assert self.eText == self.eText.strip(), \
             "ERROR: entity contains extra whitespace: '%s'" % self.eText
 
