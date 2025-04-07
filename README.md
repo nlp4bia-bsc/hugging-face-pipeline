@@ -15,7 +15,7 @@ The general pipeline for NER is the following:
 4. Train the model using the `train.py` on MareNostrum 4 (CTE-AMD) or Google Colab (with GPU runtime). TODO: training without *Weights & Biases*. Ask Jan for a simpler version.
     1. Save models and select best model.
 
-## Inference Pipeline
+## Inference Pipeline (old method `model_inference.py`)
 
 We will reuse the Training Pipeline and make inference to the **test** set of the dataset.
 
@@ -26,12 +26,25 @@ We will reuse the Training Pipeline and make inference to the **test** set of th
     - `mv * test`
     - `cp -r test train`
     - `cp -r test valid`
-2. Use the `build_dataset.py` script to create a Hugging Face Dataset with the pre-tokenized input. Indicate the source directory of the corpus (-d) and the output name/path of the Hugging Face dataset (-n).
+3. Use the `build_dataset.py` script to create a Hugging Face Dataset with the pre-tokenized input. Indicate the source directory of the corpus (-d) and the output name/path of the Hugging Face dataset (-n).
     - `python hugging-face-pipeline/build_dataset.py -d <my-corpus>/ -n <my-corpus-ner>`
     
     Make sure that the generated HF dataset loader script (e.g. my-corpus-ner.py) has the right tags and in the same order as the one used during training (usually alphabetic)! Otherwise, you will get swapped entities.
-3. Run `model_inference.py` specifying all the arguments. It will run on GPU if available. Make sure that both output directories do not exist (this is to prevent unwanted overwriting). Example usage:
+4. Make the inference. For that we have two options: running `model_inference.py` or `multiple_model_inference.py`. You can directly use the `multiple_model_inference.py` if you already have the datasets in HF format, provided with the `build_dataset.py`. The `multiple_model_inference.py` is a wrapper for the `model_inference.py`, and is the recommended way if you have to make predictions with many different models in Mare Nostrum (CTE-AMD or MN5, BSC Infrastructure). Otherwise, you can execute the `model_inference.py` script for each model. It will run on GPU if available in both cases. Make sure that both output directories do not exist (this is to prevent unwanted overwriting). You should create one directory per model. Example usage:
     - `python hugging-face-pipeline/model_inference.py -ds <my-corpus-ner> -m <my-model> -ocd <my-corpus>/test -o <my-corpus-predictions>`
+    
+    Or with `multiple_model_inference.py`, you should modify the script accordingly, specifying models and datasets.
+    - `python hugging-face-pipeline/multiple_model_inference.py`
+
+5. In the case you want to join different model's predictions, join all labels by using:
+    - `python hugging-face-pipeline/join_all_labels.py -i <input-root-directory-predictions-to-join> -o <output-directory-with-all-labels-joined>`
+
+## Inference Pipeline (new method `simple_inference.py`)
+
+⚠ WARNING: This method is NOT working completely, as there is some error on the offsets after processing, which makes the file not displayable in `brat`. For now, the old method (`model_inference.py`) is the recommended one.
+This method is suited for large datasets, though it is slower than the old method. You can check all arguments in the script. This one only needs the directory of txt files and the model. Example:
+
+- `python/hugging-face-pipeline/simple_inference.py -i <txt-files> -m <path-to-hf-model> -o <output-dir> -agg first`
 
 
 ## Directory structure
