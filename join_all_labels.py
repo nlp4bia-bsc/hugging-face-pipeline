@@ -6,7 +6,7 @@ import argparse
 def parse_args():
     parser = argparse.ArgumentParser(description="Process directories and combine .ann files.")
     # Adding two positional arguments for root and output directories
-    parser.add_argument('-i', '--root_dir', type=str, help='Input root directory containing prediction folders with ann files (e.g. predictions_dataset_A in the case of predictions_dataset_A/symptoms, predictions_dataset_A/diseases, etc.). All subdirectories should have all .ann files, even empty!')
+    parser.add_argument('-i', '--root_dir', type=str, help='Input root directory containing prediction folders.')
     parser.add_argument('-o', '--output_dir', type=str, help='Output directory to save combined annotation files.')
     return parser
 
@@ -38,7 +38,7 @@ def join_all_labels(root_dir, output_dir):
             for line in lines:
                 # Split the line to format the output properly
                 _line = line.split("\t")
-                d2.write("T{}\t{}\t{}".format(num, _line[1], _line[2]))
+                d2.write("T{}\t{}\t{}".format(num, _line[1], '\t'.join(_line[2:])))
                 num += 1
     print(f"Processed {i+1}/{len(documents)}.")
         
