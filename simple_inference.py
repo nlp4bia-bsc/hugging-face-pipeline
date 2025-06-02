@@ -118,7 +118,7 @@ def make_inference(args):
         ann_name = os.path.basename(txt_path)[:-4] + ".ann"
         ann_path = os.path.join(ANNS_PATH, ann_name)
         # Ensure output directory exists
-        os.makedirs(ANNS_PATH, exist_ok=True)
+        os.makedirs(os.path.dirname(ann_path), exist_ok=True)
         
         # Read lines from the .txt file
         lines = open(txt_path, "r").readlines()
