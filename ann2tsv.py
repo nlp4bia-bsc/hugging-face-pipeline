@@ -3,13 +3,7 @@
 
 # ## .ann to .tsv (with filename)
 # Merge annotation files (.ann) into one file and include filename
-# 
-# After merging all resulting .ann files to one using:
-# ```bash
-# find . -name '*.ann' -type f -exec grep "^T" {} + > ../all_merged.ann
-# ```
-# 
-# We then adapt the columns of the .ann file with the format required by the subtask's evaluation.
+
 
 # In[13]:
 import pandas as pd
