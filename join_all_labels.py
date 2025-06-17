@@ -36,6 +36,8 @@ def join_all_labels(root_dir, output_dir):
         num = 1
         with open(os.path.join(output_dir, doc), "a") as d2:
             for line in lines:
+                if not line.endswith("\n"):
+                    line += "\n" # add this to ensure entities across diferent annotation models are not concatenated
                 # Split the line to format the output properly
                 _line = line.split("\t")
                 d2.write("T{}\t{}\t{}".format(num, _line[1], '\t'.join(_line[2:])))
