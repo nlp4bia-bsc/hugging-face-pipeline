@@ -1,16 +1,16 @@
-# Hugging Face Pipeline
+# 🤗 Hugging Face Pipeline
 
 Automation tools for different processes regarding the training and deployment of named entity recognition (NER) models and datasets to Hugging Face.
 
 NLP for Biomedical Information Analysis (NLP4BIA).
 
-## Requisites
+## 💻 Prequisites
 
 - Operative System (OS): Linux-based, preferrably Ubuntu 22.04. There are many commands within Python scripts that won't work in other OS, I should work on that.
 - Python >= 3.8, though you can try older versions.
 - Create a virtual environment and install `requirements.txt`.
 
-## Training Pipeline
+## 💪 Training Pipeline
 
 The general pipeline for NER is the following:
 1. Annotate using Brat, download the corpus. An example can be found in the [zip](https://zenodo.org/records/8224056/files/medprocner_gs_train+test+gazz+multilingual+crossmap_230808.zip?download=1) file of the [MedProcNER](https://zenodo.org/records/8224056) Shared Task page, in the train and test directories.
@@ -18,10 +18,19 @@ The general pipeline for NER is the following:
     - `python hugging-face-pipeline/generate_val_split.py -s <my-corpus>/train -d <my-corpus>/test --test_size 125`
 3. Use the `build_dataset.py` script to create a Hugging Face Dataset with the pre-tokenized input. Indicate the source directory of the corpus (-d) and the output name/path of the Hugging Face dataset (-n).
     - `python hugging-face-pipeline/build_dataset.py -d <my-corpus>/ -n <my-corpus-ner>`
-4. Train the model using the `train.py` on MareNostrum 4 (CTE-AMD) or Google Colab (with GPU runtime). TODO: training without *Weights & Biases*. Ask Jan for a simpler version.
+4. Train the model using one of the two scripts:
+    - `simple_train.py`: vanilla training, where you can pass the hyperparameters directly. The default values should be acceptable for most fine-tunings (100-2000 documents) but don't expect the best results without proper hyperparameter tuning.
+    - `train.py` (⚠ **needs internet**): using Weights & Biases Sweep functionality, where you define the list of hyperparameters on a *.yaml* file and training monitoring can be on real-time on wandb.ai. There's an example file in `templates/sweep_default.yaml`. You will need a Weights & Biases account for that (free for academics).
     1. Save models and select best model.
 
-## Inference Pipeline (old method `model_inference.py`)
+
+## 🔍 Inference Pipeline: new method `simple_inference.py`
+
+This method is suited for large datasets, though it is slower than the old method. You can check all arguments in the script. This one only needs the directory of txt files and the model. Example:
+
+- `python/hugging-face-pipeline/simple_inference.py -i <txt-files> -m <path-to-hf-model> -o <output-dir> -agg first`
+
+### 🔎 Alternative Inference Pipeline: old method `model_inference.py`
 
 We will reuse the Training Pipeline and make inference to the **test** set of the dataset.
 
@@ -45,20 +54,13 @@ We will reuse the Training Pipeline and make inference to the **test** set of th
 5. In the case you want to join different model's predictions, join all labels by using:
     - `python hugging-face-pipeline/join_all_labels.py -i <input-root-directory-predictions-to-join> -o <output-directory-with-all-labels-joined>`
 
-## Inference Pipeline (new method `simple_inference.py`)
-
-⚠ WARNING: This method is NOT working completely, as there is some error on the offsets after processing, which makes the file not displayable in `brat`. For now, the old method (`model_inference.py`) is the recommended one.
-This method is suited for large datasets, though it is slower than the old method. You can check all arguments in the script. This one only needs the directory of txt files and the model. Example:
-
-- `python/hugging-face-pipeline/simple_inference.py -i <txt-files> -m <path-to-hf-model> -o <output-dir> -agg first`
-
-
-## Directory structure
+## 📁 Directory structure
 
 - requirements.txt -> list of necessary
 - brat -> adapted version of original [brat repository](https://github.com/nlplab/brat) files. Necessary tools for some scripts.
 - templates -> files used in different scripts as templates.
 - scripts:
+    - ann2tsv.py -> Create a tsv (with filename) from .ann files
     - build_dataset.py -> generate a HF NER dataset (CoNLL + loader script)
     - brat2conll.py -> Brat (.txt & .ann) files to CoNLL (.conll)
     - model_inference.py -> process a HF NER dataset with a specific model)
@@ -69,17 +71,14 @@ This method is suited for large datasets, though it is slower than the old metho
     - join_all_labels.py -> merge into a single .ann file, different .ann files of the same set of documents (each .ann containing different labels). Used to merge different model's predictions.
     - generate_val_split.py -> randomnly generate a split
     - generate_brat_colors.py -> generate colors for brat (to be included in visual.conf) for a given set of classes/entities
-
-
 - notebooks: directory containing useful tools for debugging, partial pipelines and work not polished yet (paths might need an update).
-    - ann2tsv.ipynb -> Create a tsv (with filename) from .ann files
     - load_predictions.ipynb -> snippet to load .ann files into a pandas dataframe
     - model_inference_pipeline -> tests to integrate within HF NER pipeline (not working)
     - conll2ann.ipynb -> .conll & .txt to Standoff (.ann)
     - predictions2conll.ipynb -> model predictions (.json & original .conll) to CoNLL (.conll) (not used anymore, as predictions are directly written to CoNLL files)
 
 
-**NOTES**
+**📝 NOTES**
 
 - Make sure to **NOT** include any other (.txt) files in the root directory rather than the raw text for annotation (e.g. a README.txt).
 
@@ -91,10 +90,10 @@ T1	PROCEDIMIENTO 775 794	ecografía abdominal
 T2	PROCEDIMIENTO 1229 1292	TAC abdomino-pélvico realizado con contraste oral e intravenoso
 ```
 
-## Contact
+## ✉ Contact
 
 Please, for any comment or doubt, you can contact me on: janrodmir \[at] gmail \[dot] com
 
-## References
+## 🔗 References
 
 [^1]: Stenetorp, Pontus and Pyysalo, Sampo and Topi\'{c}, Goran and Ohta, Tomoko and Ananiadou, Sophia and Tsujii, Jun'ichi. brat: a Web-based Tool for {NLP}-Assisted Text Annotation. Proceedings of the Demonstrations Session at EACL 2012, April 2012, Association for Computational Linguistics.
