@@ -34,7 +34,7 @@ def train(config):
   
   with open("wandb_key.txt", 'r') as key_file:
     wandb.login(key=key_file.read())
-  with wandb.init(config=config):
+  with wandb.init(config=config, save_code=True):
     config = wandb.config
     
     # Environment variables
@@ -151,8 +151,12 @@ def train(config):
     from transformers import AutoTokenizer
     
     # checkpoint = "bsc-bio-ehr-es-meddoplace/checkpoint-3598"
-    tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL)
-    tokenizer
+    try:
+        tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL)
+    # TODO: try upgrading the version of transformers (4.30.2) and tokenizers (0.13.3), it might solve the problem with IIC-RigoBERTa-Clinical
+    except Exception as e:
+        print(e)
+        tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL, use_fast=False)
     
     
     # In[16]:
@@ -354,6 +358,9 @@ def train(config):
             "fn_analysis": fn_analysis,
             "f1_analysis": f1_analysis,
         }
+
+    # This is used to have the best value in the summary.
+    wandb.define_metric("eval/f1", summary="max")
     
     
     # ### Prepare model
@@ -363,7 +370,7 @@ def train(config):
     
     from transformers import AutoConfig
     
-    roberta_config = AutoConfig.from_pretrained(BASE_MODEL,
+    auto_config = AutoConfig.from_pretrained(BASE_MODEL,
                                                 num_labels = classes.num_classes,
                                                 id2label = id2label,
                                                 label2id = label2id,
@@ -374,9 +381,9 @@ def train(config):
     # In[22]:
     
     
-    from transformers import RobertaForTokenClassification
+    from transformers import AutoModelForTokenClassification
     
-    model = RobertaForTokenClassification.from_pretrained(BASE_MODEL, config=roberta_config)
+    model = AutoModelForTokenClassification.from_pretrained(BASE_MODEL, config=auto_config)
     # model = RobertaForTokenClassification.from_pretrained('PlanTL-GOB-ES/bsc-bio-ehr-es-cantemist', config=roberta_config)
     # model = RobertaForTokenClassification.from_pretrained('PlanTL-GOB-ES/bsc-bio-ehr-es', config=roberta_config)
     
@@ -402,7 +409,8 @@ def train(config):
         report_to='wandb',
         warmup_ratio=_warmup_ratio,
         load_best_model_at_end=True,
-        metric_for_best_model="eval_f1",
+        metric_for_best_model="f1",
+        label_names=["labels"],
         save_total_limit=5
     )
     
@@ -411,7 +419,7 @@ def train(config):
     
     
     # Compute and log training metrics
-    from transformers import TrainerCallback
+    from transformers import TrainerCallback, EarlyStoppingCallback
     import copy
     
     class ComputeTrainingMetricsCallback(TrainerCallback):
@@ -467,6 +475,7 @@ def train(config):
         compute_metrics=compute_metrics,
     )
     trainer.add_callback(ComputeTrainingMetricsCallback(trainer))
+    trainer.add_callback(EarlyStoppingCallback(early_stopping_patience=5))
     trainer.model
     
     
