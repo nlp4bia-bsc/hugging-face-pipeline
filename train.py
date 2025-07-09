@@ -91,59 +91,51 @@ def train(config):
     
     
     # In[13]:
+    def get_class_weights():
+        from collections import Counter, defaultdict
+        from math import sqrt
+        
+        
+        split2freqs = defaultdict(Counter)
+        
+        # Iterate for each ner_tag, of each sample, of each subset split
+        for split_name, dataset_split in dataset_str.items():
+            for row in dataset_split["ner_tags_str"]:
+                for tag in row:
+                    split2freqs[split_name][tag] +=1
+        
+        total_weight = sum(split2freqs['train'].values())
+        print("Total sum weight:", total_weight)
+        
+        class_weights_none = pd.DataFrame([[key for key in split2freqs["train"]], [1.0 for freq in split2freqs["train"].values()]]).T.set_index(0)
+        class_weights_freq = pd.DataFrame([[key for key in split2freqs["train"]], [total_weight/(freq* classes.num_classes) for freq in split2freqs["train"].values()]]).T.set_index(0)
+        class_weights_freq_sqrt = pd.DataFrame([[key for key in split2freqs["train"]], [sqrt(total_weight/(freq* classes.num_classes)) for freq in split2freqs["train"].values()]]).T.set_index(0)
+        
+        sum_weight_sqrt = sum([split2freqs['train'][key] * class_weights_freq[1].apply(sqrt).loc[key] for key in split2freqs['train']])
+        print("Total sum square rooted weight:", sum_weight_sqrt)
+        
+        # We can use this factor to adapt the learning rate, so that it learns at the same pace as before (total_weights * lr = constant)
+        print("Ratio:", total_weight / sum_weight_sqrt)
+        
+        
+        if _weight_strategy == 'none':
+            class_weights = class_weights_none
+        elif _weight_strategy == 'freq':
+            class_weights = class_weights_freq
+        elif _weight_strategy == 'freq_sqrt':
+            class_weights = class_weights_freq_sqrt
+        
+        # Reorder class names with the same as label ids (class 0, 1, 2, 3)
+        # In case the IOB label is not present in the training set, just add an arbitrary number.
+        # It should not affect the loss computation, as it will never encounter this label during training
+        class_weights = [class_weights.loc[lab].values[0] if (lab in class_weights.index) else 1. for lab in classes.names]
+        print(class_weights_none)
+        print(class_weights_freq)
+        print(class_weights_freq_sqrt)
+        print(f"Selected weights ('{_weight_strategy}'):", class_weights)
+        return {'none': class_weights_none, 'freq': class_weights_freq, 'freq_sqrt': class_weights_freq_sqrt, 'selected': class_weights}
     
-    
-    from collections import Counter, defaultdict
-    
-    
-    split2freqs = defaultdict(Counter)
-    
-    # Iterate for each ner_tag, of each sample, of each subset split
-    for split_name, dataset_split in dataset_str.items():
-      for row in dataset_split["ner_tags_str"]:
-        for tag in row:
-            split2freqs[split_name][tag] +=1
-    
-    
-    freqs = pd.DataFrame.from_dict(split2freqs, orient="index")
-    freqs
-    
-    
-    # In[14]:
-    
-    
-    from math import sqrt
-    
-    total_weight = sum(split2freqs['train'].values())
-    print("Total sum weight:", total_weight)
-    
-    class_weights_none = pd.DataFrame([[key for key in split2freqs["train"]], [1.0 for freq in split2freqs["train"].values()]]).T.set_index(0)
-    class_weights_freq = pd.DataFrame([[key for key in split2freqs["train"]], [total_weight/(freq* classes.num_classes) for freq in split2freqs["train"].values()]]).T.set_index(0)
-    class_weights_freq_sqrt = pd.DataFrame([[key for key in split2freqs["train"]], [sqrt(total_weight/(freq* classes.num_classes)) for freq in split2freqs["train"].values()]]).T.set_index(0)
-    
-    sum_weight_sqrt = sum([split2freqs['train'][key] * class_weights_freq[1].apply(sqrt).loc[key] for key in split2freqs['train']])
-    print("Total sum square rooted weight:", sum_weight_sqrt)
-    
-    # We can use this factor to adapt the learning rate, so that it learns at the same pace as before (total_weights * lr = constant)
-    print("Ratio:", total_weight / sum_weight_sqrt)
-    
-    
-    if _weight_strategy == 'none':
-        class_weights = class_weights_none
-    elif _weight_strategy == 'freq':
-        class_weights = class_weights_freq
-    elif _weight_strategy == 'freq_sqrt':
-        class_weights = class_weights_freq_sqrt
-    
-    # Reorder class names with the same as label ids (class 0, 1, 2, 3)
-    # In case the IOB label is not present in the training set, just add an arbitrary number.
-    # It should not affect the loss computation, as it will never encounter this label during training
-    class_weights = [class_weights.loc[lab].values[0] if (lab in class_weights.index) else 1. for lab in classes.names]
-    print(class_weights_none)
-    print(class_weights_freq)
-    print(class_weights_freq_sqrt)
-    print(f"Selected weights ('{_weight_strategy}'):", class_weights)
-    
+    class_weights = get_class_weights()['selected']
     
     # In[15]:
     
@@ -400,7 +392,7 @@ def train(config):
         per_device_eval_batch_size=_batch_size,
         learning_rate=_learning_rate,
         weight_decay=_weight_decay,
-        evaluation_strategy="epoch",
+        evaluation_strategy=_evalutation_strategy,
         logging_strategy="epoch",
         # eval_steps=200,
         save_strategy="epoch",
