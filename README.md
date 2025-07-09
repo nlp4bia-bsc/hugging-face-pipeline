@@ -4,7 +4,7 @@ Automation tools for different processes regarding the training and deployment o
 
 NLP for Biomedical Information Analysis (NLP4BIA).
 
-## 💻 Prequisites
+## 💻 Pre-requisites
 
 - Operative System (OS): Linux-based, preferrably Ubuntu 22.04. There are many commands within Python scripts that won't work in other OS, I should work on that.
 - Python >= 3.8, though you can try older versions.
@@ -18,15 +18,14 @@ The general pipeline for NER is the following:
     - `python hugging-face-pipeline/generate_val_split.py -s <my-corpus>/train -d <my-corpus>/test --test_size 125`
 3. Use the `build_dataset.py` script to create a Hugging Face Dataset with the pre-tokenized input. Indicate the source directory of the corpus (-d) and the output name/path of the Hugging Face dataset (-n).
     - `python hugging-face-pipeline/build_dataset.py -d <my-corpus>/ -n <my-corpus-ner>`
-4. Train the model using one of the two scripts:
-    - `simple_train.py`: vanilla training, where you can pass the hyperparameters directly. The default values should be acceptable for most fine-tunings (100-2000 documents) but don't expect the best results without proper hyperparameter tuning.
-    - `train.py` (⚠ **needs internet**): using Weights & Biases Sweep functionality, where you define the list of hyperparameters on a *.yaml* file and training monitoring can be on real-time on wandb.ai. There's an example file in `templates/sweep_default.yaml`. You will need a Weights & Biases account for that (free for academics).
-    1. Save models and select best model.
+4. Train the model. Each experiment i.e., a run or combination of hyperparameters, is evaluated on the validation set after each epoch. We apply Early Stopping with 5-epoch patience. There are two alternative scripts:
+    - `simple_train.py`: vanilla training for one experiment, where you can pass the hyperparameters directly. The default values should be acceptable for most fine-tunings (100-2000 documents) but don't expect the best results without proper hyperparameter tuning.
+    - `train.py` (⚠ **needs internet**): using Weights & Biases Sweep functionality, where you define the list of hyperparameters on a *.yaml* file and you can monitor the training in real-time on wandb.ai. There's an example file in `templates/sweep_default.yaml`. You will need a Weights & Biases account for that (free for academics. After training all experiments, select the best model/experiment using your criteria (e.g. best strict/relaxed F1 on validation).
 
 
 ## 🔍 Inference Pipeline: new method `simple_inference.py`
 
-This method is suited for large datasets, though it is slower than the old method. You can check all arguments in the script. This one only needs the directory of txt files and the model. Example:
+This method is better suited for large datasets, though it can be slower, than the old method. You can check all arguments in the script. This one only needs the directory of txt files and the model. Example:
 
 - `python/hugging-face-pipeline/simple_inference.py -i <txt-files> -m <path-to-hf-model> -o <output-dir> -agg first`
 
