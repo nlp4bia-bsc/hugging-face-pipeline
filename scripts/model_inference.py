@@ -265,7 +265,8 @@ def model_inference(args):
         try:
             res = BIOtoStandoff.main(argv)
         except Exception as e:
-            print("ERROR with file: "+conll_file)
+            print(f"ERROR with file: {conll_file}: {e}")
+            continue
         ann_file = conll_file.replace('.conll', '.ann')
         with open(os.path.join(OUTPUT_ANNS_DIR, ann_file), 'w') as file:
             ann_content = map(lambda line: str(line)+'\n', res)

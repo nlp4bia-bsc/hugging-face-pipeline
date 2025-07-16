@@ -6,16 +6,25 @@ from model_inference import main as model_inference_main
 # Define your models and other arguments
 models_base_dir = "/gpfs/projects/bsc14/MN4/bsc14/hugging_face_models/ner" # no trailing '/'
 models = [
-    "bsc-bio-ehr-es-meddoprof-no-act-es",
+    # "bsc-bio-ehr-es-carmen-meddocan",
+    # "bsc-bio-ehr-es-meddoprof-no-act-es",
+    # "bsc-bio-ehr-es-carmen-drugtemist",
     "bsc-bio-ehr-es-carmen-distemist",
-    "bsc-bio-ehr-es-carmen-medprocner",
-    "bsc-bio-ehr-es-meddoplace",
-    "bsc-bio-ehr-es-meddoplace-subclasses",
     "bsc-bio-ehr-es-carmen-symptemist",
     "bsc-bio-ehr-es-carmen-livingner-species",
-    "bsc-bio-ehr-es-carmen-livingner-humano",
-    "bsc-bio-ehr-es-carmen-drugtemist",
-    "bsc-bio-ehr-es-carmen-meddocan",
+    # "bsc-bio-ehr-es-carmen-livingner-humano",   
+    # "bsc-bio-ehr-es-carmen-medprocner",
+    # "bsc-bio-ehr-es-meddoplace",
+    # "bsc-bio-ehr-es-meddoplace-subclasses",
+    # "bsc-bio-ehr-es-negacion",
+    # "bsc-bio-ehr-es-temporalidad",
+    # "disease-ner-cat-v1",
+    # "drug-ner-cat-v1",
+    # "prof-ner-cat",
+    # "baritone-sintoma-tagger-v1",
+    # "baritone-enfermedad-tagger-v1",
+    # "chagas-sintoma-tagger",
+    # "chagas-enfermedad-tagger",
 ]
 
 # Define the datasets in a tuple (-ds, -ocd), referring to the "-ner" dataset and the original conll dir.
