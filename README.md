@@ -15,9 +15,9 @@ NLP for Biomedical Information Analysis (NLP4BIA).
 The general pipeline for NER is the following:
 1. Annotate using Brat, download the corpus. An example can be found in the [zip](https://zenodo.org/records/8224056/files/medprocner_gs_train+test+gazz+multilingual+crossmap_230808.zip?download=1) file of the [MedProcNER](https://zenodo.org/records/8224056) Shared Task page, in the train and test directories.
 2. Make the splits, only **if not already split**, with the `generate_val_split.py` script. Indicate the source (-s), destination (-d), and test_size (number of txts if type integer; percentage if float between 0 and 1)
-    - `python hugging-face-pipeline/generate_val_split.py -s <my-corpus>/train -d <my-corpus>/test --test_size 125`
+    - `python hugging-face-pipeline/scripts/generate_val_split.py -s <my-corpus>/train -d <my-corpus>/test --test_size 125`
 3. Use the `build_dataset.py` script to create a Hugging Face Dataset with the pre-tokenized input. Indicate the source directory of the corpus (-d) and the output name/path of the Hugging Face dataset (-n).
-    - `python hugging-face-pipeline/build_dataset.py -d <my-corpus>/ -n <my-corpus-ner>`
+    - `python hugging-face-pipeline/scripts/build_dataset.py -d <my-corpus>/ -n <my-corpus-ner>`
 4. Train the model. Each experiment i.e., a run or combination of hyperparameters, is evaluated on the validation set after each epoch. We apply Early Stopping with 5-epoch patience. There are two alternative scripts:
     - `simple_train.py`: vanilla training for one experiment, where you can pass the hyperparameters directly. The default values should be acceptable for most fine-tunings (100-2000 documents) but don't expect the best results without proper hyperparameter tuning.
     - `train.py` (⚠ **needs internet**): using Weights & Biases Sweep functionality, where you define the list of hyperparameters on a *.yaml* file and you can monitor the training in real-time on wandb.ai. There's an example file in `templates/sweep_default.yaml`. You will need a Weights & Biases account for that (free for academics. After training all experiments, select the best model/experiment using your criteria (e.g. best strict/relaxed F1 on validation).
@@ -27,7 +27,7 @@ The general pipeline for NER is the following:
 
 This method is better suited for large datasets, though it can be slower, than the old method. You can check all arguments in the script. This one only needs the directory of txt files and the model. Example:
 
-- `python/hugging-face-pipeline/simple_inference.py -i <txt-files> -m <path-to-hf-model> -o <output-dir> -agg first`
+- `python/hugging-face-pipeline/scripts/simple_inference.py -i <txt-files> -m <path-to-hf-model> -o <output-dir> -agg first`
 
 ### 🔎 Alternative Inference Pipeline: old method `model_inference.py`
 
@@ -41,17 +41,17 @@ We will reuse the Training Pipeline and make inference to the **test** set of th
     - `cp -r test train`
     - `cp -r test valid`
 3. Use the `build_dataset.py` script to create a Hugging Face Dataset with the pre-tokenized input. Indicate the source directory of the corpus (-d) and the output name/path of the Hugging Face dataset (-n).
-    - `python hugging-face-pipeline/build_dataset.py -d <my-corpus>/ -n <my-corpus-ner>`
+    - `python hugging-face-pipeline/scripts/build_dataset.py -d <my-corpus>/ -n <my-corpus-ner>`
     
     Make sure that the generated HF dataset loader script (e.g. my-corpus-ner.py) has the right tags and in the same order as the one used during training (usually alphabetic)! Otherwise, you will get swapped entities.
 4. Make the inference. For that we have two options: running `model_inference.py` or `multiple_model_inference.py`. You can directly use the `multiple_model_inference.py` if you already have the datasets in HF format, provided with the `build_dataset.py`. The `multiple_model_inference.py` is a wrapper for the `model_inference.py`, and is the recommended way if you have to make predictions with many different models in Mare Nostrum (CTE-AMD or MN5, BSC Infrastructure). Otherwise, you can execute the `model_inference.py` script for each model. It will run on GPU if available in both cases. Make sure that both output directories (for ann and conll files, default is the same for both, with -o argument) do not exist (this is to prevent unwanted overwriting). You should specify one different output directory per model. The output directory will contain .conll files. You can remove them if you want. Example usage:
-    - `python hugging-face-pipeline/model_inference.py -ds <my-corpus-ner> -m <my-model> -ocd <my-corpus>/test -o <my-corpus-predictions>`
+    - `python hugging-face-pipeline/scripts/model_inference.py -ds <my-corpus-ner> -m <my-model> -ocd <my-corpus>/test -o <my-corpus-predictions>`
     
     Or with `multiple_model_inference.py`, you should modify the script accordingly, specifying models and datasets.
-    - `python hugging-face-pipeline/multiple_model_inference.py`
+    - `python hugging-face-pipeline/scripts/multiple_model_inference.py`
 
 5. In the case you want to join different model's predictions, join all labels by using:
-    - `python hugging-face-pipeline/join_all_labels.py -i <input-root-directory-predictions-to-join> -o <output-directory-with-all-labels-joined>`
+    - `python hugging-face-pipeline/scripts/join_all_labels.py -i <input-root-directory-predictions-to-join> -o <output-directory-with-all-labels-joined>`
 
 ## 📁 Directory structure
 

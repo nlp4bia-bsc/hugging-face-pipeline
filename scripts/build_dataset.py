@@ -28,9 +28,9 @@ def to_camel_case(text):
 
 def build_dataset(args):
     # Execute the brat2conll
-    subprocess.run(f'python hugging-face-pipeline/brat2conll.py -r {args.dir}', shell=True)
+    subprocess.run(f'python hugging-face-pipeline/scripts/brat2conll.py -r {args.dir}', shell=True)
     # Join all conll files
-    subprocess.run(f'bash hugging-face-pipeline/join_all_conlls.sh {args.dir}', shell=True)
+    subprocess.run(f'bash hugging-face-pipeline/scripts/join_all_conlls.sh {args.dir}', shell=True)
     # Create the HF dataset dir
     os.makedirs(args.name)
     loader_path = f"{args.name}/{os.path.basename(args.name)}.py"
